@@ -9,6 +9,8 @@ public class polRoot {
     static float[] coeff = new float[20]; // coefficients of original equation 
     static float[] fx = new float[20];
     static int degree; // Max degree of polynomial
+    static int totalIt; //Temp variable to store total amount of iterations (used to write to file)
+    static int passOrFail = 0; //Set to 1 if fail to converge (used to write to file)
 
     public static void fillArray(String fileName) throws IOException{
 
@@ -30,6 +32,7 @@ public class polRoot {
                 fx[i] = coeff[i + 1] * (i + 1);
             }
 
+            readInput.close();
             file.close();
         } catch (FileNotFoundException e) {
             System.out.println("File could not be found.");
@@ -65,6 +68,17 @@ public class polRoot {
         System.out.println("a is " + a + "b is " + b);
     }
 
+    public static void fileWrite(float solution, String outputFile){
+        try{
+            FileWriter writer = new FileWriter(System.getProperty("user.dir").concat("/"+outputFile+".sol"));
+                writer.write("Root: " + solution + "\tIterations: " + totalIt);
+                writer.close();
+            }
+            catch(Exception e){
+                System.out.println("\nError trying to write solutions to file.");
+            }
+    }
+
     public static float Bisection(float a, float b, int maxIter, float eps){
         float fa = getFunctionValue(a); // F(a)
         float fb = getFunctionValue(b); // F(b)
@@ -85,7 +99,8 @@ public class polRoot {
             
             // Check if error is less than epsilon or if zero is found
             if(Math.abs(error) < eps || fc == 0){
-                System.out.println("Algorith has converged after #" + it + "iterations!");
+                System.out.println("Algorithm has converged after #" + it + " iterations!");
+                totalIt = it;
                 return c;
             }
 
@@ -100,6 +115,7 @@ public class polRoot {
         }
 
         System.out.println("Max iterations reached without convergence...");
+        totalIt = maxIter;
         return c;
     }
     
@@ -120,7 +136,7 @@ public class polRoot {
             fx = getFunctionValue(x);
 
             if(Math.abs(d) < eps){
-                System.out.println("Algorithm has converged after #" + it + "iterations!");
+                System.out.println("Algorithm has converged after #" + it + " iterations!");
                 return x;
             }
         }
@@ -164,7 +180,7 @@ public class polRoot {
             d = d * fa;
 
             if(Math.abs(d) < eps){
-                System.out.println("Algorithm has converged after #" + it + "iterations!");
+                System.out.println("Algorithm has converged after #" + it + " iterations!");
                 return a;
             }
 
@@ -177,22 +193,60 @@ public class polRoot {
     }
 
     // Uses Bisection method from range -10000 to 10000 until 100 iterations or epsilon 1. Then uses result as start for Newton method.
-    public static float hybrid(){
-        float zero = Newton(Bisection(-10000, 10000, 100, 1), 100000, (float)0.00000001, (float)0.000001);
+    public static float hybrid(float a, float b, int maxIter, float eps, float delta){
+        float zero = Newton(Bisection(a, b, 100, (float)0.1), maxIter, eps, delta);
         return zero;
     }
 
 
 
     public static void main(String[] args) throws IOException {
-        float[] coeff = new float[20]; // coefficients of original equation 
-        float[] fx = new float[20];
+        float initP = 0;  //Starting point
+        float initP2 = 0; //Starting point 2
+        int maxIter = 10000; //Maximum iterations
+        float eps = (float) 0.00000000001; //Epsilon 
+        float delta = (float) 0.00001; //Acceptable range to converge
+        String inputFile = args[args.length - 1];  // Sets input file by using the last argument in args[]
+        String outputName = inputFile.substring( 0, inputFile.indexOf(".")); //removes the file extension from input file
+        fillArray(inputFile); //Fill array with input file
 
-        fillArray("fun1.pol");
+        //Check for custom maxIter
+        for(int i = 0; i < args.length; i++){
+            if(args[i].equals("-maxIter") || args[i].equals("-maxIt")){
+                maxIter = Integer.parseInt(args[i + 1]);
+                System.out.println("Max Iterations is set to: "+maxIter);
+            }
+        }
+        switch(args[0]){
+            case "-newt":
+                initP = Float.parseFloat(args[args.length - 2]);
+                fileWrite(Newton(initP, maxIter, eps, delta), outputName);
+                //System.out.println(Newton(initP, maxIter, eps, delta));
+                break;
+            case "-sec":
+                initP = Float.parseFloat(args[args.length - 3]);
+                initP2 = Float.parseFloat(args[args.length - 2]);
+                fileWrite(Secant(initP, initP2, maxIter, (float)0.000001), outputName);
+                //System.out.println(Secant(initP, initP2, 10000, (float)0.000001));
+                break;
+            case "-hybrid":
+                initP = Float.parseFloat(args[args.length - 3]);
+                initP2 = Float.parseFloat(args[args.length - 2]);
+                fileWrite(hybrid(initP,initP2, maxIter,eps,delta), outputName);
+                //System.out.println(hybrid(initP,initP2, maxIter,eps,delta));
+                break;
+            default:
+                initP = Float.parseFloat(args[args.length - 3]);
+                initP2 = Float.parseFloat(args[args.length - 2]);
+                fileWrite(Bisection(initP, initP2, maxIter, eps), outputName);
+                //System.out.println(Bisection(initP, initP2, maxIter, eps));  
+        }
+        /*
         System.out.println(Bisection(-1, 2, 1000, (float)0.00000001));
         System.out.println(Newton((float)5, 10000, (float)0.00001, (float)0.00001));
         System.out.println(Secant(0, 1, 10000, (float)0.000001));
         System.out.println("Hybrid is" + hybrid());
-        //System.out.println(getFunctionValue(2));
+        fileWrite(Bisection(-1, 2, 1000, (float)0.00000001));
+        */
     }
 }
