@@ -72,6 +72,11 @@ public class polRoot {
         try{
             FileWriter writer = new FileWriter(System.getProperty("user.dir").concat("/"+outputFile+".sol"));
                 writer.write("Root: " + solution + "\tIterations: " + totalIt);
+                if(passOrFail == 0){
+                    writer.write("\tSuccess");
+                } else{
+                    writer.write("\tFail");
+                }
                 writer.close();
             }
             catch(Exception e){
@@ -116,6 +121,7 @@ public class polRoot {
 
         System.out.println("Max iterations reached without convergence...");
         totalIt = maxIter;
+        passOrFail = 1;
         return c;
     }
     
@@ -137,11 +143,14 @@ public class polRoot {
 
             if(Math.abs(d) < eps){
                 System.out.println("Algorithm has converged after #" + it + " iterations!");
+                totalIt += it;
                 return x;
             }
         }
 
         System.out.println("Max iterations reached without convergence...");
+        totalIt = maxIter;
+        passOrFail = 1;
         return x;
     }
 
@@ -181,6 +190,7 @@ public class polRoot {
 
             if(Math.abs(d) < eps){
                 System.out.println("Algorithm has converged after #" + it + " iterations!");
+                totalIt = it;
                 return a;
             }
 
@@ -189,22 +199,24 @@ public class polRoot {
         }
 
         System.out.println("Maximum number of iterations reached!");
+        totalIt = maxIter;
+        passOrFail = 1;
         return a;
     }
 
     // Uses Bisection method from range -10000 to 10000 until 100 iterations or epsilon 1. Then uses result as start for Newton method.
     public static float hybrid(float a, float b, int maxIter, float eps, float delta){
-        float zero = Newton(Bisection(a, b, 100, (float)0.1), maxIter, eps, delta);
-        return zero;
+        float solution = Newton(Bisection(a, b, 100, (float)0.01), maxIter, eps, delta);
+        return solution;
     }
 
 
 
     public static void main(String[] args) throws IOException {
-        float initP = 0;  //Starting point
-        float initP2 = 0; //Starting point 2
+        float initP = 0;  //Starting point #1
+        float initP2 = 0; //Starting point #2
         int maxIter = 10000; //Maximum iterations
-        float eps = (float) 0.00000000001; //Epsilon 
+        float eps = (float) 0.0; //Epsilon 
         float delta = (float) 0.00001; //Acceptable range to converge
         String inputFile = args[args.length - 1];  // Sets input file by using the last argument in args[]
         String outputName = inputFile.substring( 0, inputFile.indexOf(".")); //removes the file extension from input file
@@ -232,7 +244,7 @@ public class polRoot {
             case "-hybrid":
                 initP = Float.parseFloat(args[args.length - 3]);
                 initP2 = Float.parseFloat(args[args.length - 2]);
-                fileWrite(hybrid(initP,initP2, maxIter,eps,delta), outputName);
+                fileWrite(hybrid(initP,initP2, maxIter,(float)0.0000001,(float)0.000000001), outputName);
                 //System.out.println(hybrid(initP,initP2, maxIter,eps,delta));
                 break;
             default:
@@ -241,12 +253,5 @@ public class polRoot {
                 fileWrite(Bisection(initP, initP2, maxIter, eps), outputName);
                 //System.out.println(Bisection(initP, initP2, maxIter, eps));  
         }
-        /*
-        System.out.println(Bisection(-1, 2, 1000, (float)0.00000001));
-        System.out.println(Newton((float)5, 10000, (float)0.00001, (float)0.00001));
-        System.out.println(Secant(0, 1, 10000, (float)0.000001));
-        System.out.println("Hybrid is" + hybrid());
-        fileWrite(Bisection(-1, 2, 1000, (float)0.00000001));
-        */
     }
 }
