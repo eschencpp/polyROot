@@ -6,8 +6,8 @@ import java.io.FileWriter;
 
 public class polRoot {
 
-    static float[] coeff = new float[20]; // coefficients of original equation 
-    static float[] fx = new float[20];
+    static double[] coeff = new double[20]; // coefficients of original equation 
+    static double[] fx = new double[20];
     static int degree; // Max degree of polynomial
     static int totalIt; //Temp variable to store total amount of iterations (used to write to file)
     static int passOrFail = 0; //Set to 1 if fail to converge (used to write to file)
@@ -24,7 +24,7 @@ public class polRoot {
 
             //Fill coefficient array; Will start at the largest index and decrement until it reaches the constant
             for(int i = degree; i >= 0; i--){
-                coeff[i] = readInput.nextFloat();
+                coeff[i] = readInput.nextDouble();
             }
 
             //Fill coefficients for derivative array
@@ -41,26 +41,26 @@ public class polRoot {
     }
 
     //Get F(xVal) or y coordinate at the inputted x value
-    public static float getFunctionValue(float xVal){
-        float funcValue = 0;
+    public static double getFunctionValue(double xVal){
+        double funcValue = 0;
         for(int i = 0; i <= degree;i++){
             //System.out.println("Coeff at " + i + "is" + coeff[i] + " MathpowX is" + Math.pow(xVal, i));
-            funcValue += coeff[i] * (float)Math.pow(xVal, i);
+            funcValue += coeff[i] * (double)Math.pow(xVal, i);
         }
         return funcValue;
     }
 
     //Get derivative of function at point x
-    public static float getDerivative(float x){
-        float derivValue = 0;
+    public static double getDerivative(double x){
+        double derivValue = 0;
         for(int i = degree - 1; i >= 0; i--){
-            derivValue += fx[i] * (float)Math.pow(x, i);
+            derivValue += fx[i] * (double)Math.pow(x, i);
         }
         return derivValue;
     }
 
-    public static void swap(float a, float b){
-        float temp = 0;
+    public static void swap(double a, double b){
+        double temp = 0;
         temp = a;
         a = b;
         b = temp;
@@ -68,10 +68,10 @@ public class polRoot {
         System.out.println("a is " + a + "b is " + b);
     }
 
-    public static void fileWrite(float solution, String outputFile){
+    public static void fileWrite(double solution, String outputFile){
         try{
             FileWriter writer = new FileWriter(System.getProperty("user.dir").concat("/"+outputFile+".sol"));
-                writer.write("Root: " + solution + "\tIterations: " + totalIt);
+                writer.write("Root: " + solution + "\tIterations: " + totalIt); // Writes solution to 8 decimal places
                 if(passOrFail == 0){
                     writer.write("\tSuccess");
                 } else{
@@ -84,18 +84,18 @@ public class polRoot {
             }
     }
 
-    public static float Bisection(float a, float b, int maxIter, float eps){
-        float fa = getFunctionValue(a); // F(a)
-        float fb = getFunctionValue(b); // F(b)
-        float c = 0;
-        float fc = 0;
+    public static double Bisection(double a, double b, int maxIter, double eps){
+        double fa = getFunctionValue(a); // F(a)
+        double fb = getFunctionValue(b); // F(b)
+        double c = 0;
+        double fc = 0;
         // either F(A) or F(b) must be negative
         if(fa * fb >= 0){
             System.out.println("Inadequate values for a and b.");
-            return (float) -1.0;
+            return (double) -1.0;
         }
 
-        float error = b - a;
+        double error = b - a;
 
         for(int it = 1; it <= maxIter;it++){
             error = error/2;
@@ -126,18 +126,18 @@ public class polRoot {
     }
     
     // Newton method of convergence
-    public static float Newton(float x, int maxIter, float eps, float delta){
-        float fx = getFunctionValue(x);
+    public static double Newton(double x, int maxIter, double eps, double delta){
+        double fx = getFunctionValue(x);
 
         for(int it = 1; it <= maxIter; it++){
-            float fd = getDerivative(x);
+            double fd = getDerivative(x);
 
             if(Math.abs(fd) < delta){
                 System.out.println("Small Slope!");
                 return x;
             }
         
-            float d = fx/fd;
+            double d = fx/fd;
             x = x - d;
             fx = getFunctionValue(x);
 
@@ -155,10 +155,10 @@ public class polRoot {
     }
 
     //Secant method of convergence
-    public static float Secant(float a, float b, int maxIter, float eps){
-        float fa = getFunctionValue(a);
-        float fb = getFunctionValue(b);
-        float temp = 0;
+    public static double Secant(double a, double b, int maxIter, double eps){
+        double fa = getFunctionValue(a);
+        double fb = getFunctionValue(b);
+        double temp = 0;
         if(Math.abs(fa) > Math.abs(fb)){
             //Swap a and b
             temp = a;
@@ -182,7 +182,16 @@ public class polRoot {
                 fb = temp;
             }
 
-            float d = 0;
+            double d = 0;
+
+            //Check if (fb - fa) is zero. If it is then return Fail and current value of a
+            if((fb-fa) == 0){
+                totalIt = it;
+                passOrFail = 1;
+                System.out.println("(fb - fa) is 0. Secant method can not divide by 0. Returning a. Iterations made: " + it);
+                return a;
+            }
+
             d = (b - a) / (fb - fa);
             b = a;
             fb = fa;
@@ -205,19 +214,19 @@ public class polRoot {
     }
 
     // Uses Bisection method from range -10000 to 10000 until 100 iterations or epsilon 1. Then uses result as start for Newton method.
-    public static float hybrid(float a, float b, int maxIter, float eps, float delta){
-        float solution = Newton(Bisection(a, b, 100, (float)0.01), maxIter, eps, delta);
+    public static double hybrid(double a, double b, int maxIter, double eps, double delta){
+        double solution = Newton(Bisection(a, b, 100, (double)0.01), maxIter, eps, delta);
         return solution;
     }
 
 
 
     public static void main(String[] args) throws IOException {
-        float initP = 0;  //Starting point #1
-        float initP2 = 0; //Starting point #2
+        double initP = 0;  //Starting point #1
+        double initP2 = 0; //Starting point #2
         int maxIter = 10000; //Maximum iterations
-        float eps = (float) 0.0; //Epsilon 
-        float delta = (float) 0.00001; //Acceptable range to converge
+        double eps = (double) Math.pow(2, -126); //Epsilon 
+        double delta = (double) 0.00001; //Acceptable range to converge
         String inputFile = args[args.length - 1];  // Sets input file by using the last argument in args[]
         String outputName = inputFile.substring( 0, inputFile.indexOf(".")); //removes the file extension from input file
         fillArray(inputFile); //Fill array with input file
@@ -231,25 +240,25 @@ public class polRoot {
         }
         switch(args[0]){
             case "-newt":
-                initP = Float.parseFloat(args[args.length - 2]);
+                initP = Double.parseDouble(args[args.length - 2]);
                 fileWrite(Newton(initP, maxIter, eps, delta), outputName);
                 //System.out.println(Newton(initP, maxIter, eps, delta));
                 break;
             case "-sec":
-                initP = Float.parseFloat(args[args.length - 3]);
-                initP2 = Float.parseFloat(args[args.length - 2]);
-                fileWrite(Secant(initP, initP2, maxIter, (float)0.000001), outputName);
-                //System.out.println(Secant(initP, initP2, 10000, (float)0.000001));
+                initP = Double.parseDouble(args[args.length - 3]);
+                initP2 = Double.parseDouble(args[args.length - 2]);
+                fileWrite(Secant(initP, initP2, maxIter, eps), outputName);
+                //System.out.println(Secant(initP, initP2, 10000, (double)0.000001));
                 break;
             case "-hybrid":
-                initP = Float.parseFloat(args[args.length - 3]);
-                initP2 = Float.parseFloat(args[args.length - 2]);
-                fileWrite(hybrid(initP,initP2, maxIter,(float)0.0000001,(float)0.000000001), outputName);
+                initP = Double.parseDouble(args[args.length - 3]);
+                initP2 = Double.parseDouble(args[args.length - 2]);
+                fileWrite(hybrid(initP,initP2, maxIter,(double)0.0000001,(double)0.000000001), outputName);
                 //System.out.println(hybrid(initP,initP2, maxIter,eps,delta));
                 break;
             default:
-                initP = Float.parseFloat(args[args.length - 3]);
-                initP2 = Float.parseFloat(args[args.length - 2]);
+                initP = Double.parseDouble(args[args.length - 3]);
+                initP2 = Double.parseDouble(args[args.length - 2]);
                 fileWrite(Bisection(initP, initP2, maxIter, eps), outputName);
                 //System.out.println(Bisection(initP, initP2, maxIter, eps));  
         }
