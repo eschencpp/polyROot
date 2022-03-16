@@ -215,7 +215,7 @@ public class polRoot {
 
     // Uses Bisection method from range -10000 to 10000 until 100 iterations or epsilon 1. Then uses result as start for Newton method.
     public static double hybrid(double a, double b, int maxIter, double eps, double delta){
-        double solution = Newton(Bisection(a, b, 100, (double)0.01), maxIter, eps, delta);
+        double solution = Newton(Bisection(a, b, 10, (double)0.01), maxIter, eps, delta);
         return solution;
     }
 
@@ -225,7 +225,7 @@ public class polRoot {
         double initP = 0;  //Starting point #1
         double initP2 = 0; //Starting point #2
         int maxIter = 10000; //Maximum iterations
-        double eps = (double) Math.pow(2, -126); //Epsilon 
+        double eps = (double) Math.pow(2, -126); //Epsilon IEEE754 single precision lowest decimal
         double delta = (double) 0.00001; //Acceptable range to converge
         String inputFile = args[args.length - 1];  // Sets input file by using the last argument in args[]
         String outputName = inputFile.substring( 0, inputFile.indexOf(".")); //removes the file extension from input file
@@ -238,6 +238,7 @@ public class polRoot {
                 System.out.println("Max Iterations is set to: "+maxIter);
             }
         }
+        //Different methods of finding zero
         switch(args[0]){
             case "-newt":
                 initP = Double.parseDouble(args[args.length - 2]);
@@ -253,7 +254,7 @@ public class polRoot {
             case "-hybrid":
                 initP = Double.parseDouble(args[args.length - 3]);
                 initP2 = Double.parseDouble(args[args.length - 2]);
-                fileWrite(hybrid(initP,initP2, maxIter,(double)0.0000001,(double)0.000000001), outputName);
+                fileWrite(hybrid(initP,initP2, maxIter,eps,delta), outputName);
                 //System.out.println(hybrid(initP,initP2, maxIter,eps,delta));
                 break;
             default:
